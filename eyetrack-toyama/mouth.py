@@ -4,16 +4,6 @@ import dlib
 import pyautogui
 import numpy as np
 
-# 目のアスペクト比を計算する関数
-
-
-def eye_aspect_ratio(eye):
-    A = np.linalg.norm(eye[1] - eye[5])
-    B = np.linalg.norm(eye[2] - eye[4])
-    C = np.linalg.norm(eye[0] - eye[3])
-    ear = (A + B) / (2.0 * C)
-    return ear
-
 # 口のアスペクト比を計算する関数
 
 
@@ -25,13 +15,9 @@ def mouth_aspect_ratio(mouth):
     return mar
 
 
-# EARのしきい値と瞬きのフレーム数
-EAR_THRESHOLD = 0.3
-EAR_CONSEC_FRAMES = 3
-
 # MAR（口のアスペクト比）のしきい値と口を開けるフレーム数
 MAR_THRESHOLD = 0.7
-MOUTH_CONSEC_FRAMES = 5
+MOUTH_CONSEC_FRAMES = 3
 
 # 瞬きカウンタ、口を開けるカウンタ、総瞬き数、総口開け数
 blink_counter = 0
@@ -67,27 +53,6 @@ while True:
     for face in faces:
         landmarks = predictor(gray, face)
 
-        # 目のランドマークを取得
-        leftEye = np.array(
-            [(landmarks.part(n).x, landmarks.part(n).y) for n in range(36, 42)])
-        rightEye = np.array(
-            [(landmarks.part(n).x, landmarks.part(n).y) for n in range(42, 48)])
-        leftEAR = eye_aspect_ratio(leftEye)
-        rightEAR = eye_aspect_ratio(rightEye)
-
-        # 両目の平均EARを計算
-        ear = (leftEAR + rightEAR) / 2.0
-
-        # EARがしきい値以下であれば瞬きカウンタを増やす
-        if ear < EAR_THRESHOLD:
-            blink_counter += 1
-        else:
-            # 瞬きカウンタが連続フレーム数以上であれば瞬きと見なし、クリックイベントを実行
-            if blink_counter >= EAR_CONSEC_FRAMES:
-                total_blinks += 1
-                pyautogui.click()
-            blink_counter = 0
-
         # 口のランドマークを取得
         mouth = np.array(
             [(landmarks.part(n).x, landmarks.part(n).y) for n in range(48, 68)])
@@ -101,6 +66,7 @@ while True:
             if mouth_open_counter >= MOUTH_CONSEC_FRAMES:
                 total_mouth_opens += 1
                 pyautogui.click()
+                print("click")
             mouth_open_counter = 0
 
         # 顔の中心位置を取得してマウスを動かす
@@ -116,8 +82,8 @@ while True:
             duration=0.1
         )
 
-    cv2.moveWindow("Frame", position_x, position_y)
-    cv2.imshow("Frame", frame)
+    # cv2.moveWindow("Frame", position_x, position_y)
+    # cv2.imshow("Frame", frame)
     key = cv2.waitKey(1)
 
     if key == 27:
